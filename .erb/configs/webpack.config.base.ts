@@ -6,6 +6,7 @@ import webpack from 'webpack';
 import webpackPaths from './webpack.paths';
 import { dependencies as externals } from '../../release/app/package.json';
 
+const WindiCSSWebpackPlugin = require('windicss-webpack-plugin')
 const configuration: webpack.Configuration = {
   externals: [...Object.keys(externals || {})],
 
@@ -44,6 +45,8 @@ const configuration: webpack.Configuration = {
   },
 
   plugins: [
+    new WindiCSSWebpackPlugin(),
+
     new webpack.EnvironmentPlugin({
       NODE_ENV: 'production',
     }),

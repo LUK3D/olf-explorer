@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import 'windi.css'
 
 const container = document.getElementById('root')!;
 const root = createRoot(container);
@@ -10,4 +11,4 @@ window.electron.ipcRenderer.once('ipc-example', (arg) => {
   // eslint-disable-next-line no-console
   console.log(arg);
 });
-window.electron.ipcRenderer.sendMessage('ipc-example', ['ping']);
+window.electron.ipcRenderer.sendMessage('ipc-run-cmd', ['ping']);

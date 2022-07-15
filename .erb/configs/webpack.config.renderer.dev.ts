@@ -97,6 +97,7 @@ const configuration: webpack.Configuration = {
     ],
   },
   plugins: [
+
     ...(requiredByDLLConfig
       ? []
       : [

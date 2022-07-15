@@ -25,10 +25,27 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
-ipcMain.on('ipc-example', async (event, arg) => {
+ipcMain.on('ipc-run-cmd', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
+
+
+  /**Maximizing the window */
+  if(arg[0] == 'window-maximize'){
+    if(mainWindow?.isMaximized()){
+      mainWindow.restore();
+    }else{
+      mainWindow?.maximize()
+
+    }
+    return;
+  }
+  /**Minimizing the WIndow */
+  if(arg[0] == 'window-minimize'){
+    mainWindow?.minimize()
+    return;
+  }
   console.log(msgTemplate(arg));
-  event.reply('ipc-example', msgTemplate('pong'));
+  // event.reply('ipc-runc-cmd', msgTemplate('pong'));
 });
 
 if (process.env.NODE_ENV === 'production') {
@@ -73,7 +90,9 @@ const createWindow = async () => {
     show: false,
     width: 1024,
     height: 728,
-    icon: getAssetPath('icon.png'),
+    icon: getAssetPath('logo-circle.png'),
+    frame:false,
+    title:"Open Fragments Explorer",
     webPreferences: {
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')

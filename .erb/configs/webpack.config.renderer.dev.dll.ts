@@ -10,6 +10,7 @@ import webpackPaths from './webpack.paths';
 import { dependencies } from '../../package.json';
 import checkNodeEnv from '../scripts/check-node-env';
 
+
 checkNodeEnv('development');
 
 const dist = webpackPaths.dllPath;
@@ -44,6 +45,7 @@ const configuration: webpack.Configuration = {
   },
 
   plugins: [
+
     new webpack.DllPlugin({
       path: path.join(dist, '[name].json'),
       name: '[name]',
