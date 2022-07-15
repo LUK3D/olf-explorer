@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { RadioGroup } from '@headlessui/react';
-
+import { GetFunctions } from "../../../git/auth";
+import { User,SimpleRepository } from "../../../git/types";
+import HorizontalLine from '../dashboard/components/horizontalLine';
 const menus = [
   {
     name: 'Account',
@@ -57,8 +59,30 @@ const menus = [
  * ## Options Component
  * @returns
  */
-export function Options() {
+export function Options(args:{addFolders:Function}) {
   const [selected, setSelected] = useState(menus[0]);
+  const [gitToken, setGitToken] = useState("");
+  const [user, setUser] = useState<User|null>(null);
+
+
+    var otk:GetFunctions;
+
+
+    async function login() {
+      
+      otk = await new GetFunctions(gitToken)
+      setUser( (await otk.getUserInfo()).data);
+      var repos = await otk.getRepos();
+
+      args.addFolders(repos.data);
+
+
+    }
+
+
+
+
+
   return (
     <div className="w-full h-full grid grid-cols-3 ">
       <div className="col-span-1 h-full border-r dark:border-dark-800">
@@ -121,19 +145,29 @@ export function Options() {
         <div className="w-full h-full overflow-y-auto flex flex-col">
           <div className="w-full flex flex-col items-center justify-center p-10">
             <div className="w-30 h-30 bg-gray-300 dark:bg-dark-500 rounded-full relative">
-                <div className='w-5 h-5 bg-indigo-400 rounded-full right-0 absolute'></div>
+                <div className='w-5 h-5 bg-indigo-400 rounded-full right-0 absolute'>
+                </div>
+                <img className='w-full h-full rounded-full ' src={user?.avatar_url} alt="" />
             </div>
-            <p className="mt-4">@Luk3D</p>
+            <p className="mt-4">{user?.name}</p>
+            <div className='flex flex-col text-center w-full'>
+            <p className=" text-xs mx-1">@{user?.login}</p>
+            <HorizontalLine></HorizontalLine>
+            <p className=" text-xs mx-1">{user?.bio}</p>
+            </div>
+            <HorizontalLine></HorizontalLine>
 
             <div className="w-3/4 bg-gray-200 rounded-md mt-4 border dark:border-dark-800 dark:bg-dark-500">
               <input
+              value={gitToken}
+              onChange={(e)=>setGitToken(e.target.value)}
                 type="password"
                 className="w-full text-center bg-transparent px-4 py-1 outline-none  text-lg"
                 placeholder="Github User Access Key"
               />
             </div>
 
-            <button className="w-2/4 px-4 py-2 bg-indigo-500 rounded-lg mt-10 hover:shadow-2xl text-white">
+            <button onClick={login} className="w-2/4 px-4 py-2 bg-indigo-500 rounded-lg mt-10 hover:shadow-2xl text-white">
               Connect
             </button>
           </div>

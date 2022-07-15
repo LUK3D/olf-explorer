@@ -1,5 +1,5 @@
-import { FolderListType } from 'interfaces';
-import { FileModel } from '../Models/FileModel';
+import { FolderListType } from 'types';
+import { FileModel } from '../types/FileModel';
 import FolderIcon from './folderIcon';
 import folderLight from '../../../../assets/folder-light.png';
 import folderDark from '../../../../assets/folder-dark.png';

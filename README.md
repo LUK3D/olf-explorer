@@ -39,20 +39,21 @@ You can be parte of the project by forking the project, make improvements and se
 
 Some cool stuf to be made
 
-| #   | Feature                                        | State |
-| --- | ---------------------------------------------- | ----- |
-| 1   | Basic Explorer functions                       | ✔     |
-| 2   | Github Authentication                          |
-| 3   | Dark Theme                                     | ✔     |
-| 4   | Dark Theme Folder Varients                     | ✔     |
-| 5   | Line Layout for Folder List                    | ✔     |
-| 6   | Grid layout for Folder List                    | ✔     |
-| 7   | File Fragmentation                             |
-| 9   | File Download                                  |
-| 8   | File Preview                                   |
-| 10  | Create new Empty Folder                        |
-| 12  | Move Files and Folders                         |
-| 13  | Delete Files and Folders                       |
-| 14  | Share Files Between Users                      |
-| 15  | Extentions Integration                         |
-| 16  | Dev Api to extend the Explorer Functionalities |
+| #   | Feature                                             | State |
+| --- | --------------------------------------------------- | ----- |
+| 1   | Basic Explorer functions                            | ✔     |
+| 2   | Github Authentication                               | ✔     |
+| 3   | Dark Theme                                          | ✔     |
+| 4   | Dark Theme Folder Varients                          | ✔     |
+| 5   | Line Layout for Folder List                         | ✔     |
+| 6   | Grid layout for Folder List                         | ✔     |
+| 7   | List Folders From Github for the Authenticated User | ✔     |
+| 8   | File Fragmentation                                  |
+| 9   | File Download                                       |
+| 10  | File Preview                                        |
+| 11  | Create new Empty Folder                             |
+| 12  | Move Files and Folders                              |
+| 13  | Delete Files and Folders                            |
+| 14  | Share Files Between Users                           |
+| 15  | Extentions Integration                              |
+| 16  | Dev Api to extend the Explorer Functionalities      |

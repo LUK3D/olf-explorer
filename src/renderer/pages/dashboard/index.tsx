@@ -4,10 +4,11 @@ import HorizontalLine from './components/horizontalLine';
 import LeftMenu from './components/sideMenu';
 
 import logo from "../../../assets/logo.png";
-import {FolderListType, Settings} from "../../../interfaces";
+import {FolderListType, Settings} from "../../../types";
 import PopUp from 'renderer/Components/popup';
 import { Options } from '../options';
 import { Header } from './components/header';
+import { SimpleRepository } from 'git/types';
 
 
 
@@ -33,9 +34,17 @@ const [settings, setSettings] = useState<Settings>({
     setSettings({...settings, darkmod: darkmode})
   },[darkmode])
 
+
+
+  const [folders,setFolders] = useState<Array<SimpleRepository>>([])
+
+  function addFolders(folders:Array<SimpleRepository>) {
+    setFolders(folders);
+  }
+
   return (
   <div className={`${darkmode?'dark':''} w-screen h-screen flex flex-col`}>
-    <PopUp tittle='Options' child={<Options />} state={{isOpen:showPopUp,setPopupOpen:setShowPopUp}} width="w-2/5" height='h-2/5'></PopUp>
+    <PopUp tittle='Options' child={<Options addFolders={addFolders} />} state={{isOpen:showPopUp,setPopupOpen:setShowPopUp}} width="w-2/5" height='h-auto'></PopUp>
     <Header logo={logo} minimize={minimize} maximize={maximize} ></Header>
     <div className={`w-screen dark:text-gray-300 text-gray-500 h-screen flex bg-gray-200 overflow-hidden dark:bg-dark-900  `}>
       <LeftMenu popUpState={{state:{isOpen:showPopUp,setPopupOpen:setShowPopUp}}} key='teste' onclick={{function:setDarkmode,state:darkmode}} />
@@ -115,8 +124,8 @@ const [settings, setSettings] = useState<Settings>({
           </div>
           <div className={`grid gird-cols-1 h-full  ${(settings.folderListType == FolderListType.list)?' md:grid-cols-2': 'md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 '}   gap-4 py-5 overflow-y-auto pr-2`}>
            {
-            ([...Array(100).keys()].map((el,index)=> (
-              <FileCard settings={settings} key={'id'+index} owner="@Luk3d" filename={'Pasta de teste_'+index+''}></FileCard>
+            (folders.map((folder,index)=> (
+              <FileCard settings={settings} key={'id'+index} owner="@Luk3d" filename={folder.name}></FileCard>
             )))
            }
           </div>

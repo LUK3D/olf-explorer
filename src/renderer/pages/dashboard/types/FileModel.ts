@@ -1,4 +1,4 @@
-import {Settings} from "../../../../interfaces";
+import {Settings} from "../../../../types";
 
 /**
  * ## File Model
