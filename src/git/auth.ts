@@ -20,7 +20,7 @@ export class GetFunctions {
    async getRepos(){
        return await this.octokit.repos.listForAuthenticatedUser();
     }
-
+ 
    async getUserInfo(){
     return await this.octokit.users.getAuthenticated();
    }

@@ -1,3 +1,4 @@
+import { FileSizes } from "renderer/utils"
 
 
 export interface Settings{
@@ -8,4 +9,11 @@ export interface Settings{
 export enum FolderListType{
     grid,
     list
+}
+
+export interface FileDroped{
+    Context: string,
+    Path: string,
+    Base64ImageData: string,
+    sizes?:FileSizes
 }

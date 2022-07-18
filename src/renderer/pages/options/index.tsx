@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { RadioGroup } from '@headlessui/react';
 import { GetFunctions } from "../../../git/auth";
-import { User,SimpleRepository } from "../../../git/types";
+import { User} from "../../../git/types";
 import HorizontalLine from '../dashboard/components/horizontalLine';
 const menus = [
   {
@@ -59,24 +59,15 @@ const menus = [
  * ## Options Component
  * @returns
  */
-export function Options(args:{addFolders:Function}) {
+export function Options(args:{user:User|null, loginFunction:Function }) {
+
   const [selected, setSelected] = useState(menus[0]);
   const [gitToken, setGitToken] = useState("");
-  const [user, setUser] = useState<User|null>(null);
 
-
-    var otk:GetFunctions;
 
 
     async function login() {
-      
-      otk = await new GetFunctions(gitToken)
-      setUser( (await otk.getUserInfo()).data);
-      var repos = await otk.getRepos();
-
-      args.addFolders(repos.data);
-
-
+         await args.loginFunction(gitToken);
     }
 
 
@@ -147,13 +138,13 @@ export function Options(args:{addFolders:Function}) {
             <div className="w-30 h-30 bg-gray-300 dark:bg-dark-500 rounded-full relative">
                 <div className='w-5 h-5 bg-indigo-400 rounded-full right-0 absolute'>
                 </div>
-                <img className='w-full h-full rounded-full ' src={user?.avatar_url} alt="" />
+                <img className='w-full h-full rounded-full ' src={args.user?.avatar_url} alt="" />
             </div>
-            <p className="mt-4">{user?.name}</p>
+            <p className="mt-4">{args.user?.name}</p>
             <div className='flex flex-col text-center w-full'>
-            <p className=" text-xs mx-1">@{user?.login}</p>
+            <p className=" text-xs mx-1">@{args.user?.login}</p>
             <HorizontalLine></HorizontalLine>
-            <p className=" text-xs mx-1">{user?.bio}</p>
+            <p className=" text-xs mx-1">{args.user?.bio}</p>
             </div>
             <HorizontalLine></HorizontalLine>
 

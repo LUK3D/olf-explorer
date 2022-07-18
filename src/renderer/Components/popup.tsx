@@ -31,9 +31,10 @@ function PopUp(args:PopUpProps = {}){
         leave="ease-in duration-200"
         leaveFrom="opacity-100"
         leaveTo="opacity-0"
-        className={"flex dark:text-gray-300  text-gray-600 fixed z-20 top-0 right-0 w-screen h-screen bg-dark-500 bg-opacity-50 flex-col justify-center items-center"}
+        className={"flex dark:text-gray-300  text-gray-600 fixed z-20 top-0 right-0 w-screen h-screen bg-dark-900 bg-opacity-70 flex-col justify-center items-center"}
         onClick={()=>args.state?.setPopupOpen(!args.state?.isOpen)}
-      >
+      > 
+      
         
         <div onClick={(e)=>e.stopPropagation()} className={`${args.width?args.width:'w-3/4'} ${args.height?args.height:'h-3/4'}    bg-white dark:bg-dark-300  rounded-md shadow-2xl flex flex-col`}>
                 <div className="w-full h-10 border-b dark:border-dark-800 px-4 py-2 flex justify-between items-center">

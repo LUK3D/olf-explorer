@@ -4,16 +4,26 @@ import HorizontalLine from './components/horizontalLine';
 import LeftMenu from './components/sideMenu';
 
 import logo from "../../../assets/logo.png";
-import {FolderListType, Settings} from "../../../types";
+import {FileDroped, FolderListType, Settings} from "../../../types";
 import PopUp from 'renderer/Components/popup';
 import { Options } from '../options';
 import { Header } from './components/header';
-import { SimpleRepository } from 'git/types';
+import { SimpleRepository, User } from 'git/types';
+import { GetFunctions } from 'git/auth';
+import { StorageKeys } from '../../../constants/storageKeys';
+
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { notification, Notification } from 'renderer/Components/notification';
+import FileUpload from 'renderer/Components/fileUpload';
 
 
 
 
 function App() {
+
+
+  
 
 function maximize(){
     window.electron.ipcRenderer.sendMessage('ipc-run-cmd', ['window-maximize']);
@@ -25,39 +35,276 @@ function minimize(){
 const [settings, setSettings] = useState<Settings>({
     folderListType:FolderListType.grid
 })
+const [user, setUser] = useState<User|null>(null);
 
   const [darkmode, setDarkmode] = useState<boolean>(false)
   
   const [showPopUp,setShowPopUp] = useState<boolean>(false);
-
-  useEffect(()=>{
-    setSettings({...settings, darkmod: darkmode})
-  },[darkmode])
-
-
-
+  
   const [folders,setFolders] = useState<Array<SimpleRepository>>([])
 
+  const [fileicon,setFileIcon] = useState<FileDroped|null>(null);
+  const [progress,setProgress] = useState<number>(0);
+  const [isLoading,setisLoading] = useState<boolean>(false);
+  
   function addFolders(folders:Array<SimpleRepository>) {
     setFolders(folders);
   }
 
+
+  const [notifications, setNotifications] = useState<Array<notification>>([
+    {
+      notification_id:"notification_" + Date.now()+(Object.keys(5).map(x=>Math.random())).join(''),
+        expanded:false,
+        content:"Lorem ipsum dolor sit amet consectetur, adipisicing elit. At ipsum aperiam vel rerum ea officia totam debitis commodi veritatis. Voluptatem, rem sapiente? Quasi assumenda id quibusdam veniam architecto omnis inventore?"
+    },
+    {
+      notification_id:"notification_" + Date.now()+(Object.keys(5).map(x=>Math.random())).join(''),
+        expanded:false,
+        content:"Lorem ipsum dolor sit amet consectetur adipisicing elit. Porro nam fugit voluptatum labore tempore cumque, culpa, ipsum possimus doloremque, ullam debitis explicabo voluptatem minus. Dolor nam quas doloribus similique qui?" 
+    },
+]);
+
+
+function addNotification(content:string, isLoading?:false) {
+    setNotifications([{content,expanded:true,isLoading:isLoading, notification_id:"notification_" + Date.now()+(Object.keys(5).map(x=>Math.random())).join('')},...notifications]);
+    setShowNotification(true);
+}
+
+  useEffect(()=>{
+    setSettings({...settings, darkmod: darkmode})
+    localStorage.setItem(StorageKeys.generalSettings, JSON.stringify(settings));
+  },[darkmode]);
+
+
+
+  var otk:GetFunctions;
+
+  async function login(token:string|null){
+    if(!token){
+      //No Token Provided
+      return;
+    }
+
+    if(token.trim().length ==0){
+      //No Token provided
+      return;
+    }
+ 
+    otk = await new GetFunctions(token);
+    setUser( (await otk.getUserInfo()).data);
+    var repos = await otk.getRepos();
+    //@ts-ignore
+    addFolders(repos.data);
+    localStorage.setItem(StorageKeys.userSecret,token);
+  }
+
+  useEffect(() => {
+    let tmp_settings = localStorage.getItem(StorageKeys.generalSettings);
+
+    if(tmp_settings){
+     
+      setSettings(JSON.parse(tmp_settings));
+    }
+
+    setDarkmode(settings.darkmod==true);
+
+    login(localStorage.getItem(StorageKeys.userSecret));
+  }, []);
+
+const [filUpload, setFilUpload] = useState(false);
+
+const [showNotification, setShowNotification] = useState<boolean>(false);
+
+
+useEffect(() => {
+  setTimeout(() => {
+    setFileIcon(null)
+  }, 300);
+}, [filUpload]);
+
+
+window.electron.ipcRenderer.on('addIcon',(args)=>{
+  let data = args;
+  //@ts-ignore
+  data.Base64ImageData = "data:image/png;base64,"+ data.Base64ImageData;
+  console.log(args);
+  setFileIcon(args as FileDroped)
+})
+
+let toastIt = ()=> toast("Creating Github Repositor for this file",{autoClose:5000,toastId:new Date().toString()});
+
+
+
+
+
+let stage = 1;
+window.electron.ipcRenderer.on('addLoading',(args)=>{
+  //@ts-ignore
+  let _progress = ((stage/fileicon?.sizes?.chunks??1)*100 );
+  if(_progress>progress){
+    setProgress(Math.round(_progress));
+
+
+    if(fileicon?.sizes?.chunks)
+    if(stage>=fileicon?.sizes?.chunks){
+      stage=0;
+      setProgress(0);
+      setisLoading(false);
+      setFileIcon(null);
+      console.log("Adcionando notificacoes");
+      addNotification("Creating Github Repositor for "+(fileicon.Path??'').split("\\").at(-1)?.split("/").at(-1)+". Please, wait...");
+      toastIt();
+      setFilUpload(false);
+     
+    }else{
+      stage+=1;
+    }
+
+  }
+
+   
+})
+
+
+
+function fragmentFile(){
+  setisLoading(true);
+  stage = 0;
+  setProgress(0);
+  window.electron.ipcRenderer.sendMessage('ipc-run-cmd', ['file-fragment', fileicon?.Path??'']);
+}
+
+
+
+function dropHandler(ev:any) {
+  console.log('File(s) dropped');
+
+  // Impedir o comportamento padrão (impedir que o arquivo seja aberto)
+  ev.preventDefault();
+
+  if (ev.dataTransfer.items) {
+    // Use a interface DataTransferItemList para acessar o (s) arquivo (s)
+
+
+      var file = ev.dataTransfer.items[0].getAsFile();
+      window.electron.ipcRenderer.sendMessage('ipc-run-cmd', ['file-getIcon',file.path]);
+
+
+    // for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+    //   // Se os itens soltos não forem arquivos, rejeite-os
+    //   if (ev.dataTransfer.items[i].kind === 'file') {
+
+        
+    //     var file = ev.dataTransfer.items[i].getAsFile();
+        
+    //     window.electron.ipcRenderer.sendMessage('ipc-run-cmd', ['file-getIcon',file.path]);
+    //     console.log('... file[' + i + '].name = ' + file.name);
+    //   }
+    // }
+  } else {
+    // Use a interface DataTransfer para acessar o (s) arquivo (s)
+
+    var file = ev.dataTransfer.files[0].getAsFile();
+      window.electron.ipcRenderer.sendMessage('ipc-run-cmd', ['file-getIcon',file.path]);
+
+    // for (var i = 0; i < ev.dataTransfer.files.length; i++) {
+    //   console.log('... file[' + i + '].name = ' + ev.dataTransfer.files[i].name);
+    // }
+  }
+}
+
+  function dragOverHandler(ev:any) {
+    console.log('File(s) in drop zone');
+  
+    // Impedir o comportamento padrão (impedir que o arquivo seja aberto)
+    ev.preventDefault();
+  }
+
+
+
+
+  
+
   return (
   <div className={`${darkmode?'dark':''} w-screen h-screen flex flex-col`}>
-    <PopUp tittle='Options' child={<Options addFolders={addFolders} />} state={{isOpen:showPopUp,setPopupOpen:setShowPopUp}} width="w-2/5" height='h-auto'></PopUp>
+    <PopUp tittle='Options' child={<Options loginFunction={login} user={user} />} state={{isOpen:showPopUp,setPopupOpen:setShowPopUp}} width="w-2/5" height='h-auto'></PopUp>
+    <PopUp width='w-2/5' height='h-auto' child={
+    
+    
+    <div className="w-full p-10 flex flex-col">
+
+            <div onDrop={dropHandler} onDragOver={dragOverHandler} className="w-full  flex flex-col justify-center items-center border-4 border-dashed rounded-lg border-indigo-500 p-5 text-indigo-500">
+                  
+                  {
+                    (fileicon)? 
+                    <>
+                    <img className='w-20 h-20'  src={fileicon.Base64ImageData} />
+                    <p className='mt-5 font-bold text-xl'>{fileicon.Path.split("\\").at(-1)?.split("/").at(-1)}</p>
+
+                    <div className='flex justify-center items-center text-gray-500'>
+                    <p className='mx-2'>Size: <span>{fileicon.sizes?.mb}MB</span></p>
+                    <p className='mx-2 my-2'>Fragments: <span>{fileicon.sizes?.chunks.toFixed(0)}</span></p>
+                    </div>
+
+                   
+
+                    <button onClick={fragmentFile} className={`${isLoading ==true?'hidden':'flex'} px-2 py-2 my-5 w-5/5 md:w-3/5 mr-2 shadow-lg  justify-center  rounded-md bg-indigo-500 hover:bg-indigo-600 text-white`}>
+                      <div className='mr-2'>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                      </div>
+                      Upload File
+                    </button>
+
+                    </>
+                    
+                    :
+
+                    <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-30 w-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p className='mt-5 font-bold text-xl'>Dop a file or click to Upload</p>
+                    
+                    </>
+                  }
+
+                  <div  className={`${isLoading ==true?'flex':'hidden'} transition-all h-6 my-2 w-full bg-indigo-300 rounded-lg p-1`}>
+                      <div style={{width:`${(progress>100)?100:progress}%`}} className=' h-full bg-indigo-500 rounded-md'>
+
+                      </div>
+                  </div>
+                  <p className='text-gray-400 text-sm mb-10'>Files more then 500 MB can take longger then smaller ones</p>
+                  
+            </div> 
+
+        </div>
+    
+    
+    
+    } tittle='File upload' state={{isOpen:filUpload,setPopupOpen:setFilUpload}} />
+
     <Header logo={logo} minimize={minimize} maximize={maximize} ></Header>
-    <div className={`w-screen dark:text-gray-300 text-gray-500 h-screen flex bg-gray-200 overflow-hidden dark:bg-dark-900  `}>
-      <LeftMenu popUpState={{state:{isOpen:showPopUp,setPopupOpen:setShowPopUp}}} key='teste' onclick={{function:setDarkmode,state:darkmode}} />
+
+    <ToastContainer />
+
+    <Notification notifications={notifications} setNotifications={setNotifications} expanded={showNotification} onExpandClick={()=>setShowNotification(!showNotification)} ></Notification>
+
+    <div className={`w-screen  h-full  dark:text-gray-300 text-gray-500 flex bg-gray-200 overflow-hidden dark:bg-dark-900  `}>
+      <LeftMenu user={user} popUpState={{state:{isOpen:showPopUp,setPopupOpen:setShowPopUp}}} key='teste' onclick={{function:setDarkmode,state:darkmode}} />
 
       <div className='w-full h-full overflow-y-auto grid grid-cols-12'>
         <div className='col-span-12 lg:col-span-9 h-full  overflow-y-auto p-1 md:p-5 lg:p-10 pb-0 lg:pb-0 flex flex-col'>
           <div className='flex items-center justify-between'>
             <div> <p className='font-bold'>OLF-Explorer</p> </div>
             <div className='flex items-center'>
-              <button   className='p-2 mx-1 flex items-center rounded-md bg-white hover:bg-gray-300 dark:hover:bg-dark-100 dark:bg-dark-300'>
+              <button onClick={()=>setFilUpload(!filUpload)}  className='p-2 mx-1 flex items-center rounded-md bg-white hover:bg-gray-300 dark:hover:bg-dark-100 dark:bg-dark-300'>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
                   <path className='stroke-current' id="plus-circle" d="M12,9v3m0,0v3m0-3h3m-3,0H9m12,0a9,9,0,1,1-9-9A9,9,0,0,1,21,12Z" transform="translate(-2 -2)" fill="none" stroke="#4a5568" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"/>
                 </svg>
+                
 
                 <p className='ml-2'>Add File</p>
               </button>
@@ -177,8 +424,16 @@ const [settings, setSettings] = useState<Settings>({
       </div>
 
     </div>
-    <div className='w-full h-7 bg-indigo-500'>
-
+    <div className='w-full h-7 bg-indigo-500 flex items-center justify-between text-white'>
+              <div></div>
+              <div>
+                <button onClick={()=>setShowNotification(!showNotification)} className='w-7 h-7'>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+                </svg>
+                </button>
+              </div>
     </div>
 </div>
     

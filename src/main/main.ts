@@ -14,6 +14,12 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+//@ts-ignore 
+
+import fileIcon from 'icon-extractor';
+import {fragMentFile, fragmentFile2} from './olf';
+
+import { getFileSize } from '../renderer/utils';
 
 class AppUpdater {
   constructor() {
@@ -25,6 +31,7 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
+let first = true;
 ipcMain.on('ipc-run-cmd', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
 
@@ -44,7 +51,43 @@ ipcMain.on('ipc-run-cmd', async (event, arg) => {
     mainWindow?.minimize()
     return;
   }
-  console.log(msgTemplate(arg));
+  /**Get icons From File */
+  if(arg[0] == 'file-getIcon'){
+    
+    if(first){
+
+      fileIcon.emitter.on('icon', async function(data:any){
+        data.sizes = await getFileSize(data.Path);
+        console.log("SIZES:",data)
+        event.reply('addIcon', data);
+      });
+      
+
+      first = false;
+    }
+
+    fileIcon.getIcon('SomeContextLikeAName',arg[1]);
+   
+  }
+
+  /**Fragment Files*/
+  if(arg[0] == 'file-fragment'){
+
+    
+    fragmentFile2(arg[1]!,function(val:any){
+      event.reply('addLoading', val); 
+    },(err:any)=>{
+      console.log("ERRO:",err)
+    },()=>{
+      
+    })
+
+    // fileIcon.getIcon('SomeContextLikeAName',arg[1]);
+   
+  }
+
+  
+  // console.log(msgTemplate(arg));
   // event.reply('ipc-runc-cmd', msgTemplate('pong'));
 });
 
