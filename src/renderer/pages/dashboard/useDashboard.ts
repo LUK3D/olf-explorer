@@ -16,7 +16,10 @@ export default ()=>{
     }
     
     const [settings, setSettings] = useState<Settings>({
-        folderListType:FolderListType.grid
+        folderListType:FolderListType.grid,
+        tmpFolders:{
+          repositories:"./tmp"
+        }
     })
     const [user, setUser] = useState<User|null>(null);
     
@@ -50,6 +53,11 @@ export default ()=>{
     
     let stage = 1;
 
+
+    var otk:GetFunctions;
+
+    
+
     useEffect(()=>{
         setSettings({...settings, darkmod: darkmode})
         localStorage.setItem(StorageKeys.generalSettings, JSON.stringify(settings));
@@ -65,11 +73,14 @@ export default ()=>{
         }
     
         setDarkmode(settings.darkmod==true);
-    
         login(localStorage.getItem(StorageKeys.userSecret),()=>{
           addNotification("We ware unable to connect to your github account.Please, login to continue.",false);
           setShowPopUp(true);
+        }).then(async ()=>{
+          addNotification("Welcome " + await (await otk.getUserInfo()).data.login,false);
+          setShowPopUp(false);
         });
+        
       }, []);
 
       useEffect(() => {
@@ -86,6 +97,36 @@ export default ()=>{
         console.log(args);
         setFileIcon(args as FileDroped)
       })
+
+
+      async function doneFragmenting(){
+        
+        console.log("FINALIZAMOS")
+
+
+        await login(localStorage.getItem(StorageKeys.userSecret),()=>{
+          addNotification("We ware unable to connect to your github account.Please, login to continue.",false);
+          setShowPopUp(true);
+        })
+        
+
+        let name = (fileicon?.Path??'').split("\\").at(-1)?.split("/").at(-1);
+        stage=0;
+        setProgress(0);
+        setisLoading(false);
+        setFileIcon(null);
+        console.log("Adcionando notificacoes");
+        addNotification("Creating Github Repositor for "+name+". Please, wait...");
+        toastIt();
+        setFilUpload(false);
+
+        
+        
+        console.log(otk.getUserInfo())
+        await otk?.createRepository(settings,(name?.split(".")[0]??'undefined-name'));
+        console.log("NAO VAI FUNCIONAR")
+
+      }
       
       
       window.electron.ipcRenderer.on('addLoading',(args)=>{
@@ -93,26 +134,34 @@ export default ()=>{
         let _progress = ((stage/fileicon?.sizes?.chunks??1)*100 );
         if(_progress>progress){
           setProgress(Math.round(_progress));
-      
-      
+          
+          console.log(stage)
+          
           if(fileicon?.sizes?.chunks)
-          if(stage>=fileicon?.sizes?.chunks){
-            stage=0;
-            setProgress(0);
-            setisLoading(false);
-            setFileIcon(null);
-            console.log("Adcionando notificacoes");
-            addNotification("Creating Github Repositor for "+(fileicon.Path??'').split("\\").at(-1)?.split("/").at(-1)+". Please, wait...");
-            toastIt();
-            setFilUpload(false);
-           
+          if(stage>fileicon?.sizes?.chunks){
+            // doneFragmenting();
           }else{
-            stage+=1;
+            let num = 0;
+
+            try {
+              num = parseInt(args!.toString().split('Working on: "').join("").split('"').join(""));
+            } catch (error) {
+              console.log("ERROR:", args,"is not a fragmentation progress menssage");
+            }
+
+            if(num> stage){
+              stage+=1;
+            }
           }
       
         }
       
          
+      })
+      window.electron.ipcRenderer.on('endLoading',(args)=>{
+        if(stage>=fileicon?.sizes?.chunks!){
+          doneFragmenting();
+        }
       })
     
       
@@ -127,16 +176,20 @@ export default ()=>{
         setShowNotification(true);
     }
     
-    var otk:GetFunctions;
+    
 
     async function login(token:string|null, onError?:Function){
     if(!token){
         //No Token Provided
+        if(onError)
+        onError();
         return;
     }
 
     if(token.trim().length ==0){
         //No Token provided
+        if(onError)
+        onError();
         return;
     }
 

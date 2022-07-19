@@ -70,11 +70,11 @@ function FileCard(args: FileModel) {
       <div className="flex justify-between items-center mt-5">
         <div className="flex flex-col">
           <p className="font-bold">Filesize:</p>
-          <p>2.5MB</p>
+          <p>{args.size}</p>
         </div>
         <div className="flex flex-col">
           <p className="font-bold">Created At:</p>
-          <p>22/03/2022</p>
+          <p>{args.createdAt?.toString()}</p>
         </div>
       </div>
     </div>

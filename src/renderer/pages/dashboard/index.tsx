@@ -355,6 +355,7 @@ function App() {
                   settings={settings}
                   key={'id' + index}
                   owner="@Luk3d"
+                  
                   filename={folder.name}
                 ></FileCard>
               ))}

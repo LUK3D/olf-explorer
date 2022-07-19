@@ -72,18 +72,18 @@ ipcMain.on('ipc-run-cmd', async (event, arg) => {
 
   /**Fragment Files*/
   if(arg[0] == 'file-fragment'){
-
-    
     fragmentFile2(arg[1]!,function(val:any){
-      event.reply('addLoading', val); 
+      console.log(val.toString())
+      event.reply('addLoading', val.toString()); 
     },(err:any)=>{
       console.log("ERRO:",err)
     },()=>{
-      
+      event.reply('endLoading',true); 
     })
-
-    // fileIcon.getIcon('SomeContextLikeAName',arg[1]);
-   
+  }
+  /**Fragment Files*/
+  if(arg[0] == 'native-create-repository'){
+    console.log("Criando repositório");
   }
 
   
