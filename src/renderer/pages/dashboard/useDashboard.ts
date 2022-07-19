@@ -66,7 +66,10 @@ export default ()=>{
     
         setDarkmode(settings.darkmod==true);
     
-        login(localStorage.getItem(StorageKeys.userSecret));
+        login(localStorage.getItem(StorageKeys.userSecret),()=>{
+          addNotification("We ware unable to connect to your github account.Please, login to continue.",false);
+          setShowPopUp(true);
+        });
       }, []);
 
       useEffect(() => {
@@ -126,7 +129,7 @@ export default ()=>{
     
     var otk:GetFunctions;
 
-    async function login(token:string|null){
+    async function login(token:string|null, onError?:Function){
     if(!token){
         //No Token Provided
         return;
@@ -136,13 +139,21 @@ export default ()=>{
         //No Token provided
         return;
     }
+
+    try {
+      otk = await new GetFunctions(token);
+      setUser( (await otk.getUserInfo()).data);
+      var repos = await otk.getRepos();
+      //@ts-ignore
+      addFolders(repos.data);
+      localStorage.setItem(StorageKeys.userSecret,token);
+      
+    } catch (error) {
+      if(onError)
+        onError();
+    }
     
-    otk = await new GetFunctions(token);
-    setUser( (await otk.getUserInfo()).data);
-    var repos = await otk.getRepos();
-    //@ts-ignore
-    addFolders(repos.data);
-    localStorage.setItem(StorageKeys.userSecret,token);
+  
     }
     
   
@@ -195,8 +206,6 @@ export default ()=>{
     }
     
     function dragOverHandler(ev:any) {
-    console.log('File(s) in drop zone');
-    
     // Impedir o comportamento padrão (impedir que o arquivo seja aberto)
     ev.preventDefault();
     }

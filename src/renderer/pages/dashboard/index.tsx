@@ -490,6 +490,4 @@ function App() {
   );
 }
 
-class DashboardController {}
-
 export default App;
