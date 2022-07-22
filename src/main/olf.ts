@@ -51,24 +51,29 @@ export function fragmentFile2(filePath:string, onMessage?:Function, onError?:Fun
                 onError(error)
             }
         });
+        let trigged = false;
 
-        ls.on("close", code => {
 
-            spawn("git", ["add","-A"],{cwd:finalDir}).on('close', () =>{
-                spawn("git",["commit","-m","\"🚀 Added Fragmented Files\""], {cwd:finalDir}).on('close', () =>{
-                    spawn("git",["push"], {cwd:finalDir}).on('close', (err) =>{ 
-                        if(onDone){
-                            onDone(code);
-                        }
+        ls.on("exit", code => {
+            if(!trigged){
+                spawn("git", ["add","-A"],{cwd:finalDir}).on('exit', () =>{
+                    spawn("git",["commit","-m","\"🚀 Added Fragmented Files\""], {cwd:finalDir}).on('exit', () =>{
+                        spawn("git",["push"], {cwd:finalDir}).on('exit', (err) =>{ 
+                            if(onDone){
+                                onDone(code);
+                            }
+                        }).stderr.on("data", function (data:any) { 
+                            console.log(data.toString());
+                        })
                     }).stderr.on("data", function (data:any) { 
-                        // console.log(data.toString());
-                    })
-                }).stderr.on("data", function (data:any) { 
-                    // console.log(data.toString());
+                        console.log(data.toString());
+                    });
+                }).stdout.on("data", function (data:any) { 
+                    console.log(data.toString());
                 });
-            }).stdout.on("data", function (data:any) { 
-                // console.log(data.toString());
-            });
+                trigged = true;
+            }
+           
 
 
             
