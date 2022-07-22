@@ -50,8 +50,7 @@ function App() {
         tittle="Options"
         child={<Options loginFunction={login} user={user} />}
         state={{ isOpen: showPopUp, setPopupOpen: setShowPopUp }}
-        width="w-2/5"
-        height="h-auto"
+        className="w-full h-full mt-10 pb-10 lg:w-3/4 lg:h-3/4 "
       ></PopUp>
       <PopUp
         width="w-2/5"

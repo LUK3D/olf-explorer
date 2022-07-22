@@ -20,6 +20,7 @@ import fileIcon from 'icon-extractor';
 import {fragMentFile, fragmentFile2} from './olf';
 
 import { getFileSize } from '../renderer/utils';
+import { GitCommands } from './git';
 
 class AppUpdater {
   constructor() {
@@ -72,9 +73,9 @@ ipcMain.on('ipc-run-cmd', async (event, arg) => {
 
   /**Fragment Files*/
   if(arg[0] == 'file-fragment'){
+
     fragmentFile2(arg[1]!,function(val:any){
-      console.log(val.toString())
-      event.reply('addLoading', val.toString()); 
+        event.reply('addLoading', val.toString()); 
     },(err:any)=>{
       console.log("ERRO:",err)
     },()=>{
@@ -83,7 +84,16 @@ ipcMain.on('ipc-run-cmd', async (event, arg) => {
   }
   /**Fragment Files*/
   if(arg[0] == 'native-create-repository'){
-    console.log("Criando repositório");
+    
+    new GitCommands().createRempo({location:arg[1], repoName: arg[2], url: arg[3] ,onMessage:(resp:any)=>{
+      console.log("GIT OUTPUT:", resp.toString())
+    },
+    onComplete:(code:any, projectPath:string)=>{
+      event.reply('native-create-repository-done',[projectPath]);
+    }
+  
+  })
+  
   }
 
   
@@ -131,11 +141,12 @@ const createWindow = async () => {
 
   mainWindow = new BrowserWindow({
     show: false,
-    width: 1024,
+    width: 1048,
     height: 728,
     icon: getAssetPath('logo-circle.png'),
     frame:false,
     title:"Open Fragments Explorer",
+    
     webPreferences: {
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')

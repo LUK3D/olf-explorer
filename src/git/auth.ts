@@ -31,7 +31,7 @@ export class GetFunctions {
      * @param settings Program Settings
      * @param name The name of the repository
      */
-   async createRepository(settings:Settings, name:string){
+   async createRepository(destination:string, name:string){
     let user = await this.getUserInfo();
 
     if(!user){
@@ -49,7 +49,13 @@ export class GetFunctions {
             console.log(repo);
         }
        } catch (error) {
-            window.electron.ipcRenderer.sendMessage("ipc-run-cmd",["native-create-repository",settings.tmpFolders.repositories,name]);
+        var result = await this.octokit.repos.createForAuthenticatedUser({
+            name:name,
+            auto_init:true
+        });
+
+        
+            window.electron.ipcRenderer.sendMessage("ipc-run-cmd",["native-create-repository",destination,name, result.data.clone_url]);
         return;
         
        }

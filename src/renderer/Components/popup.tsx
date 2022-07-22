@@ -6,7 +6,8 @@ export interface PopUpProps {
     state?:PopUpState,
     tittle?:string,
     width?:string,
-    height?:string
+    height?:string,
+    className?:string,
 
 }
  
@@ -36,7 +37,7 @@ function PopUp(args:PopUpProps = {}){
       > 
       
         
-        <div onClick={(e)=>e.stopPropagation()} className={`${args.width?args.width:'w-3/4'} ${args.height?args.height:'h-3/4'}    bg-white dark:bg-dark-300  rounded-md shadow-2xl flex flex-col`}>
+        <div onClick={(e)=>e.stopPropagation()} className={`  ${args.className}    bg-white dark:bg-dark-300  rounded-md shadow-2xl flex flex-col`}>
                 <div className="w-full h-10 border-b dark:border-dark-800 px-4 py-2 flex justify-between items-center">
                     <div className="text-lg"><p>{args.tittle}</p></div>
                     <div className="flex ">

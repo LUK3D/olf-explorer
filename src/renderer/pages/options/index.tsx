@@ -132,8 +132,8 @@ export function Options(args:{user:User|null, loginFunction:Function }) {
           </div>
         </div>
       </div>
-      <div className="col-span-2 h-full flex flex-col">
-        <div className="w-full h-full overflow-y-auto flex flex-col">
+      <div className="col-span-2 h-full flex flex-col justify-center items-center">
+        <div className="w-2/4 h-full overflow-y-auto flex flex-col">
           <div className="w-full flex flex-col items-center justify-center p-10">
             <div className="w-30 h-30 bg-gray-300 dark:bg-dark-500 rounded-full relative">
                 <div className='w-5 h-5 bg-indigo-400 rounded-full right-0 absolute'>

@@ -7,7 +7,8 @@ import { notification } from 'renderer/Components/notification';
 import { toast } from 'react-toastify';
 
 export default ()=>{
-
+  //Variavel para controlar se existe algum processo de fragmentação em curso
+  let itsExecuting = false;
     function maximize(){
         window.electron.ipcRenderer.sendMessage('ipc-run-cmd', ['window-maximize']);
     }
@@ -18,7 +19,7 @@ export default ()=>{
     const [settings, setSettings] = useState<Settings>({
         folderListType:FolderListType.grid,
         tmpFolders:{
-          repositories:"./tmp"
+          repositories:"C:\\Users\\Delfi\\Downloads\\.tmp"
         }
     })
     const [user, setUser] = useState<User|null>(null);
@@ -100,7 +101,8 @@ export default ()=>{
 
 
       async function doneFragmenting(){
-        
+
+      
         console.log("FINALIZAMOS")
 
 
@@ -110,32 +112,40 @@ export default ()=>{
         })
         
 
-        let name = (fileicon?.Path??'').split("\\").at(-1)?.split("/").at(-1);
+        // let name = (fileicon?.Path??'').split("\\").at(-1)?.split("/").at(-1);
         stage=0;
         setProgress(0);
         setisLoading(false);
         setFileIcon(null);
-        console.log("Adcionando notificacoes");
-        addNotification("Creating Github Repositor for "+name+". Please, wait...");
+        // addNotification("Creating Github Repositor for "+name+". Please, wait...");
         toastIt();
         setFilUpload(false);
 
         
         
-        console.log(otk.getUserInfo())
-        await otk?.createRepository(settings,(name?.split(".")[0]??'undefined-name'));
-        console.log("NAO VAI FUNCIONAR")
+       
 
       }
+
+
       
+      window.electron.ipcRenderer.on('native-create-repository-done',(args)=>{
+        if(itsExecuting)
+        {
+          return;
+        }else{
+          itsExecuting = true;
+        }
+        
+        window.electron.ipcRenderer.sendMessage('ipc-run-cmd', ['file-fragment', fileicon?.Path??'']);
+      })
+
       
       window.electron.ipcRenderer.on('addLoading',(args)=>{
         //@ts-ignore
         let _progress = ((stage/fileicon?.sizes?.chunks??1)*100 );
         if(_progress>progress){
           setProgress(Math.round(_progress));
-          
-          console.log(stage)
           
           if(fileicon?.sizes?.chunks)
           if(stage>fileicon?.sizes?.chunks){
@@ -144,6 +154,7 @@ export default ()=>{
             let num = 0;
 
             try {
+              //@ts-ignore
               num = parseInt(args!.toString().split('Working on: "').join("").split('"').join(""));
             } catch (error) {
               console.log("ERROR:", args,"is not a fragmentation progress menssage");
@@ -158,17 +169,21 @@ export default ()=>{
       
          
       })
-      window.electron.ipcRenderer.on('endLoading',(args)=>{
+
+      window.electron.ipcRenderer.on('endLoading',async (args)=>{
         if(stage>=fileicon?.sizes?.chunks!){
           doneFragmenting();
+          var repos = await otk.getRepos();
+          //@ts-ignore
+          addFolders(repos.data);
         }
       })
     
       
     
       function addFolders(folders:Array<SimpleRepository>) {
-    setFolders(folders);
-    }
+        setFolders(folders);
+      }
     
     
     function addNotification(content:string, isLoading?:false) {
@@ -210,16 +225,29 @@ export default ()=>{
     }
     
   
-    function fragmentFile(){
+
     
+    async function fragmentFile(){
+
     
+      
+
+      otk = await new GetFunctions(localStorage.getItem(StorageKeys.userSecret)!);
+      let name = (fileicon?.Path??'').split("\\").at(-1)?.split("/").at(-1);
     
+      await otk?.createRepository(fileicon?.Path!,(name?.split(".")[0]??'undefined-name'));
+
+
+        console.log("=>Fragmenting Files");
     
-      setisLoading(true);
-      stage = 0;
-      setProgress(0);
-      window.electron.ipcRenderer.sendMessage('ipc-run-cmd', ['file-fragment', fileicon?.Path??'']);
+        setisLoading(true);
+        stage = 0;
+        setProgress(0);
+      
     }
+      
+
+    
     
     function dropHandler(ev:any) {
       console.log('File(s) dropped');
