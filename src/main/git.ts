@@ -1,52 +1,59 @@
 import fs from 'fs';
-import { Settings } from './../types/index';
-import { Octokit } from '@octokit/rest';
-import {  spawn } from 'child_process';
-
-
-
-
+import { spawn } from 'child_process';
 
 export class GitCommands {
-    
+  async createRempo(args: {
+    location: string;
+    repoName: string;
+    url: string;
+    onMessage?: Function;
+    onError?: Function;
+    onComplete?: Function;
+  }) {
+    // let capp = args.location.split('.')[0].split('/').join('\\').split('\\');
+    // let tmpName = capp.at(-1);
+    // capp.pop();
 
- 
-   async createRempo(args:{location:string, repoName:string, url:string, onMessage?:Function,onError?:Function,onComplete?:Function}){
-       
-       
-   let appFolder = args.location.split(".")[0];
+    let appFolder =args.location.split('.')[0];
 
 
-    await fs.mkdirSync(appFolder,{recursive:true});
+    let tmpDest = appFolder.split('/').join('\\').split('\\');
+    tmpDest.pop();
+    tmpDest.push(appFolder.split('/').join('\\').split('\\').at(-1)!.split(' ').join('-').split('--').join('-'))
+    appFolder = tmpDest.join('\\');
 
-    let wcd = args.location.split("/").join('\\').split('\\');
+
+
+    await fs.mkdirSync(appFolder, { recursive: true });
+
+    let wcd = args.location.split('/').join('\\').split('\\');
     wcd.pop();
 
-        const ls = spawn("git", ["clone",args.url],{cwd:wcd.join('\\')});
+    const ls = spawn('git', ['clone', args.url], { cwd: wcd.join('\\') });
 
-        ls.stdout.on("data", data => {
-            if(args.onMessage){
-                args.onMessage(data)
-            }
-        });
+    ls.stdout.on('data', (data) => {
+      if (args.onMessage) {
+        args.onMessage(data);
+      }
+    });
 
-        ls.stderr.on("data", data => {
-            if(args.onError){
-                args.onError(data)
-            }
-            console.log(`ERROR: ${data.toString()}`);
-        });
+    ls.stderr.on('data', (data) => {
+      if (args.onError) {
+        args.onError(data);
+      }
+      console.log(`ERROR: ${data.toString()}`);
+    });
 
-        ls.on('error', (error) => {
-            if(args.onError){
-                args.onError(error)
-            }
-        });
+    ls.on('error', (error) => {
+      if (args.onError) {
+        args.onError(error);
+      }
+    });
 
-        ls.on("close", async code => {
-
-
-           let response = await fs.writeFileSync(appFolder+"\\README.md",`
+    ls.on('close', async (code) => {
+    await fs.writeFileSync(
+        appFolder + '\\README.md',
+        `
 # Open Linked Fragments
 
 ## Open Linkend Fragments Explorer Folder
@@ -56,33 +63,45 @@ Welcome 🖖 This is a folder generated automatically by Open Linked Fragments E
 We are creating an easy way to manage your fragmented files by creating a File Explorer with moder User Interface and User Experience.
 
             
-            `);
-            
-            let trigged = false;
+            `
+      );
 
-            spawn("git", ["add","-A"],{cwd:appFolder}).on('close', () =>{
-                spawn("git",["commit","-m","\"Initial Commit for Readme\""], {cwd:appFolder}).on('close', () =>{
-                    spawn("git",["push"], {cwd:appFolder}).on('close', async (err) =>{ 
-                        if(args.onComplete && !trigged){
-                                // await fs.rmdirSync(appFolder)
-                                args.onComplete(code,appFolder);
-                                trigged = true;
-                        }
-                    }).stderr.on("data", function (data:any) { 
-                        console.log(data.toString());
-                    })
-                }).stderr.on("data", function (data:any) { 
-                    console.log(data.toString());
+      await fs.writeFileSync(
+        appFolder + '\\meta.json',
+        JSON.stringify({
+          fileName: args.repoName + '.' + args.location.split('.').at(-1),
+        })
+      );
+
+      let trigged = false;
+    //   if (args.onComplete) 
+    //   args.onComplete(code, appFolder);
+
+      spawn('git', ['add', '-A'], { cwd: appFolder })
+        .on('exit', () => {
+          spawn('git', ['commit', '-m', '"Initial Commit for Readme"'], {
+            cwd: appFolder,
+          })
+            .on('exit', () => {
+              spawn('git', ['push'], { cwd: appFolder })
+                .on('exit', async (err) => {
+                  if (args.onComplete && !trigged) {
+                    // await fs.rmdirSync(appFolder)
+                    args.onComplete(code, appFolder);
+                    trigged = true;
+                  }
+                })
+                .stderr.on('data', function (data: any) {
+                  console.log(data.toString());
                 });
-            }).stdout.on("data", function (data:any) { 
-                console.log(data.toString());
+            })
+            .stderr.on('data', function (data: any) {
+              console.log(data.toString());
             });
-
-           
-           
-
-
-            
+        })
+        .stdout.on('data', function (data: any) {
+          console.log(data.toString());
         });
-    }
+    });
+  }
 }

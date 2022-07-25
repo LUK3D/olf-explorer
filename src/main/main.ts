@@ -16,7 +16,7 @@ import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 //@ts-ignore 
 
-import fileIcon from 'icon-extractor';
+import fileIcon from '../icon-extractor/win-iconExtractor';
 import {fragMentFile, fragmentFile2} from './olf';
 
 import { getFileSize } from '../renderer/utils';

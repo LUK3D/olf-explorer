@@ -14,6 +14,7 @@ import HorizontalLine from './horizontalLine';
 function FileCard(args: FileModel) {
   return args.settings?.folderListType == FolderListType.grid ? (
     <div
+    onClick={()=>args.selectFile()}
       className={` group hover:shadow-2xl  transition-shadow cursor-pointer bg-gray-50 dark:bg-dark-300 text-sm card p-5 hover:bg-white dark:hover:bg-dark-100 rounded-md border border-gray-300 dark:border-dark-100 shadow-sm flex flex-col `}
     >
       <div className="flex justify-between items-center">

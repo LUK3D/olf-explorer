@@ -19,7 +19,10 @@ export class GetFunctions {
      * ## List of all user Repositories
      */
    async getRepos(){
-       return await this.octokit.repos.listForAuthenticatedUser();
+       return await this.octokit.repos.listForAuthenticatedUser({
+        sort:'created',
+        
+       });
     }
  
    async getUserInfo(){
@@ -50,8 +53,11 @@ export class GetFunctions {
         }
        } catch (error) {
         var result = await this.octokit.repos.createForAuthenticatedUser({
+            private:true,
             name:name,
-            auto_init:true
+            auto_init:true,
+            description:"repository generated with olf .olf-repository",
+          
         });
 
         

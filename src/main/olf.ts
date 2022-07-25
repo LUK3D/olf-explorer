@@ -28,7 +28,12 @@ export function fragmentFile2(filePath:string, onMessage?:Function, onError?:Fun
         let destination1  =filePath.split("/").join('\\').split("\\");
         // destination1.pop();
 
-        let finalDir = destination1.join('\\')?.split(".")[0].split(" ").join("-")??"";
+        let tmpDest = destination1;
+        tmpDest.pop();
+        tmpDest.push(destination1.at(-1)!.split(' ').join('-').split('--').join('-'))
+        destination1 = tmpDest;
+
+        let finalDir = (destination1.join('\\')?.split(".")[0].split(" ").join("-")??"");
 
 
         const ls = spawn("luk-fragments", ["fgm",filePath,finalDir],{cwd:finalDir});

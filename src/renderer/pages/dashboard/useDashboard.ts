@@ -5,6 +5,8 @@ import { GetFunctions } from 'git/auth';
 import { StorageKeys } from '../../../constants/storageKeys';
 import { notification } from 'renderer/Components/notification';
 import { toast } from 'react-toastify';
+import { FileModel } from './types/FileModel';
+import axios from 'axios';
 
 export default ()=>{
   //Variavel para controlar se existe algum processo de fragmentação em curso
@@ -29,6 +31,9 @@ export default ()=>{
     const [showPopUp,setShowPopUp] = useState<boolean>(false);
     
     const [folders,setFolders] = useState<Array<SimpleRepository>>([])
+    const [currentFoldes,setCurrentFolders] = useState<Array<SimpleRepository>>([])
+
+    const [selectedFile,setSelectedFile] = useState<SimpleRepository|null>(null);
     
     const [fileicon,setFileIcon] = useState<FileDroped|null>(null);
     const [progress,setProgress] = useState<number>(0);
@@ -101,9 +106,6 @@ export default ()=>{
 
 
       async function doneFragmenting(){
-
-      
-        console.log("FINALIZAMOS")
 
 
         await login(localStorage.getItem(StorageKeys.userSecret),()=>{
@@ -182,7 +184,7 @@ export default ()=>{
       
     
       function addFolders(folders:Array<SimpleRepository>) {
-        setFolders(folders);
+        setFolders(folders.filter(x=>x.description?.includes(".olf-repository")));
       }
     
     
@@ -211,9 +213,7 @@ export default ()=>{
     try {
       otk = await new GetFunctions(token);
       setUser( (await otk.getUserInfo()).data);
-      var repos = await otk.getRepos();
-      //@ts-ignore
-      addFolders(repos.data);
+      refreshFoldes();
       localStorage.setItem(StorageKeys.userSecret,token);
       
     } catch (error) {
@@ -222,6 +222,17 @@ export default ()=>{
     }
     
   
+    }
+
+    /**
+     * # REFRESH FILES LIST
+     */
+    async function refreshFoldes(){
+
+      otk = await new GetFunctions(localStorage.getItem(StorageKeys.userSecret)!);
+      var repos = await otk.getRepos();
+      //@ts-ignore
+      addFolders(repos.data);
     }
     
   
@@ -244,6 +255,27 @@ export default ()=>{
         stage = 0;
         setProgress(0);
       
+    }
+
+
+    
+
+    async function searchFiles(val:string){
+      if(currentFoldes.length == 0){
+        console.log("ADDING",currentFoldes.length);
+        setCurrentFolders(folders);
+        
+      }
+      if(val.trim().length==0){
+        if(currentFoldes)
+        addFolders(currentFoldes);
+
+      }else{
+        if(currentFoldes)
+        addFolders(currentFoldes.filter(x=>x.description?.toLowerCase()?.includes(val.toLowerCase()) || x.name.toLowerCase()?.includes(val.toLowerCase())));
+
+      }
+
     }
       
 
@@ -290,8 +322,39 @@ export default ()=>{
     // Impedir o comportamento padrão (impedir que o arquivo seja aberto)
     ev.preventDefault();
     }
+
+
+    async function viewFileDetails(file:SimpleRepository) {
+      otk = await new GetFunctions(localStorage.getItem(StorageKeys.userSecret)!);
+
+      otk.octokit.repos.getContent({
+        owner:file.owner.login,
+        repo:file.name,
+        path:""
+      }).then((response)=>{
+
+        otk.octokit.git.getBlob({
+          owner:file.owner.login,
+          repo:file.name,
+          //@ts-ignore
+          path:response.data[0].path,
+          //@ts-ignore
+          file_sha:response.data[0].sha
+        }).then((val)=>{
+          console.log(val.data);
+        })
+
+      
+        console.log(response);
+      })
+
+      setSelectedFile(file)
+    }
     
     return {
+      refreshFoldes,
+        selectedFile,setSelectedFile,
+        viewFileDetails,
         dragOverHandler,
         dropHandler,
         fragmentFile,
@@ -316,5 +379,8 @@ export default ()=>{
         setFilUpload,
         notifications, 
         setNotifications,
+        searchFiles,
+        setCurrentFolders,
+        currentFoldes,
     }
 }

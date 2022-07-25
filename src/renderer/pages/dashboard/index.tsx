@@ -3,10 +3,12 @@ import HorizontalLine from './components/horizontalLine';
 import LeftMenu from './components/sideMenu';
 
 import logo from '../../../assets/logo.png';
+import papersWhite from '../../../assets/papers-white.png';
+import papersBlack from '../../../assets/papers-black.png';
 import PopUp from 'renderer/Components/popup';
 import { Options } from '../options';
 import { Header } from './components/header';
-import { FileDroped, FolderListType, Settings } from '../../../types';
+import {  FolderListType} from '../../../types';
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -40,6 +42,9 @@ function App() {
     settings,
     setSettings,
     folders,
+    searchFiles,
+    viewFileDetails,
+    refreshFoldes
   } = useDashboard();
 
   return (
@@ -90,7 +95,7 @@ function App() {
             <div className="flex items-center justify-between">
               <div>
                 {' '}
-                <p className="font-bold">OLF-Explorer</p>{' '}
+                <p className="font-bold whitespace-nowrap">OLF-Explorer</p>{' '}
               </div>
               <div className="flex items-center">
                 <button
@@ -116,13 +121,20 @@ function App() {
                     />
                   </svg>
 
-                  <p className="ml-2">Add File</p>
+                  <p className="ml-2 whitespace-nowrap">Add File</p>
                 </button>
-                <button className="p-2 mx-1 rounded-md bg-white hover:bg-gray-300 dark:hover:bg-dark-100 dark:bg-dark-300 flex group">
+                <button onClick={()=>refreshFoldes()} className="p-2 mx-1 rounded-md bg-white dark:bg-dark-300 dark:hover:bg-dark-100 hover:bg-gray-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+
+                <button className="p-2 mx-1  rounded-md bg-white hover:bg-gray-300 dark:hover:bg-dark-100 dark:bg-dark-300 flex group">
                   <input
                     type="text"
-                    className="bg-transparent outline-none w-bg-light-100   pr-2  "
+                    className="bg-transparent outline-none bg-transparent   pr-2  "
                     placeholder="Search Here..."
+                    onKeyUp={(e)=>searchFiles(e.currentTarget.value)}
                   />
                   <div>
                     <svg
@@ -342,8 +354,12 @@ function App() {
                 </div>
               </div>
             </div>
-            <div
-              className={`grid gird-cols-1 h-full  ${
+            {
+              (folders?.length>0)?
+              
+              (
+                <div
+              className={`grid gird-cols-1 items-start h-full  ${
                 settings.folderListType == FolderListType.list
                   ? ' md:grid-cols-2'
                   : 'md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 '
@@ -354,11 +370,42 @@ function App() {
                   settings={settings}
                   key={'id' + index}
                   owner="@Luk3d"
-                  
+                  selectFile={()=>viewFileDetails(folder)}
                   filename={folder.name}
                 ></FileCard>
               ))}
             </div>
+              ):
+              <div className='w-full h-full flex flex-col justify-center items-center'>
+                  <img src={settings.darkmod?papersBlack:papersWhite} alt="" className='' />
+                  <p className='text-xl text-gray-400 mt-10'> There are no Fragmented Files on your Repository</p>
+                  <button
+                  onClick={() => setFilUpload(!filUpload)}
+                  className="p-2 mx-1 flex mt-10   items-center rounded-md bg-white hover:bg-gray-300 dark:hover:bg-dark-100 dark:bg-dark-300"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      className="stroke-current"
+                      id="plus-circle"
+                      d="M12,9v3m0,0v3m0-3h3m-3,0H9m12,0a9,9,0,1,1-9-9A9,9,0,0,1,21,12Z"
+                      transform="translate(-2 -2)"
+                      fill="none"
+                      stroke="#4a5568"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                    />
+                  </svg>
+
+                  <p className="ml-2 whitespace-nowrap">Click here to add your first file 🚀</p>
+                </button>
+              </div>
+            }
           </div>
           <div className="hidden lg:flex col-span-3 h-full bg-white dark:bg-dark-300  flex-col px-10 py-5">
             <div className="flex items-center">
@@ -406,8 +453,8 @@ function App() {
               quia.
             </p>
             <HorizontalLine></HorizontalLine>
-            <div className="flex items-center mt-4">
-              <button className="px-2 py-2 mr-2 shadow-lg flex justify-center w-full rounded-md bg-indigo-500 hover:bg-indigo-600 text-white">
+            <div className="flex items-center flex-wrap mt-4">
+              <button className="px-2 py-2 mr-2 shadow-lg flex justify-center  rounded-md bg-indigo-500 hover:bg-indigo-600 text-white mb-2">
                 <div className="mr-2">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -430,7 +477,7 @@ function App() {
                 </div>
                 Download File
               </button>
-              <button className="bg-red-500 hover:bg-red-600 dark:bg-dark-100 text-white px-4 py-2 shadow-lg rounded-md flex">
+              <button className="bg-red-500 hover:bg-red-600 dark:bg-dark-100  text-white px-4 py-2 shadow-lg rounded-md justify-center flex mb-2">
                 <div className="mr-2">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -491,3 +538,8 @@ function App() {
 }
 
 export default App;
+function currentFolder(currentFolder: any): string | undefined {
+  throw new Error('Function not implemented.');
+}
+
+

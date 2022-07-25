@@ -35,5 +35,6 @@ export interface FileModel{
     /**An ecnrypted password for the file */
     secret?:string,
     /**Defines de Aplication configuration */
-    settings?:Settings
+    settings?:Settings,
+    selectFile:Function
 }
